@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-
+import { useState, useRef, useContext } from 'react';
+import AuthContext from '../store/auth-context';
 import classes from './AuthForm.module.css';
 
 const AuthForm = () => {
@@ -7,6 +7,8 @@ const AuthForm = () => {
   const passwordInputRef = useRef();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  const authCtx = useContext(AuthContext);
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
@@ -18,6 +20,25 @@ const AuthForm = () => {
     const enteredPassword = passwordInputRef.current.value;
 
     if (isLogin) {
+      fetch(
+        'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyAdo_pvxrbfVn-OD609CTGYcUZzCXLIq1w',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: enteredEmail,
+            password: enteredPassword,
+            returnSecureToken: true,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+        .then((res) => res.json())
+        .then((data) => authCtx.login(data.idToken))
+        .catch((err) => {
+          console.log(err);
+        });
     } else {
       setIsLoading(true);
       fetch(
@@ -33,16 +54,24 @@ const AuthForm = () => {
             'Content-Type': 'application/json',
           },
         }
-      ).then((res) => {
-        if (res.ok) {
-          //...
+      )
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then((data) => {
+              const errorMsg = data.error.message;
+              throw new Error(errorMsg);
+            });
+          }
+          return res.json();
+        })
+        .then((data) => {
+          console.log(data);
           setIsLoading(false);
-        } else {
-          return res.json((data) => {
-            console.log(data);
-          });
-        }
-      });
+        })
+        .catch((err) => {
+          alert(err.message);
+          setIsLoading(false);
+        });
     }
   };
 
