@@ -34,9 +34,19 @@ const AuthForm = () => {
           },
         }
       )
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then((data) => {
+              const errorMsg = data.error.message || 'Login failed!';
+              throw new Error(errorMsg);
+            });
+          }
+
+          return res.json();
+        })
         .then((data) => authCtx.login(data.idToken))
         .catch((err) => {
+          alert(err.message || 'Login failed!');
           console.log(err);
         });
     } else {
