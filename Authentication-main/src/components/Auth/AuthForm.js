@@ -43,12 +43,13 @@ const AuthForm = () => {
               const errorMsg = data.error.message || 'Login failed!';
               throw new Error(errorMsg);
             });
-          }
-
-          return res.json();
+          } else return res.json();
         })
         .then((data) => {
-          authCtx.login(data.idToken);
+          const expirationTime = new Date(
+            new Date().getTime() + 60 * 5 * 1000
+          ).toISOString();
+          authCtx.login(data.idToken, expirationTime);
           history.replace('/');
         })
         .catch((err) => {
@@ -77,8 +78,7 @@ const AuthForm = () => {
               const errorMsg = data.error.message;
               throw new Error(errorMsg);
             });
-          }
-          return res.json();
+          } else return res.json();
         })
         .then((data) => {
           console.log(data);
